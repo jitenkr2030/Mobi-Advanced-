@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}AI Budgeting & Forecasting - Mobi Invoice{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">AI Budgeting & Forecasting</h1>
+        <div class="flex space-x-4">
+            <button onclick="runAIAnalysis()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                <i class="fas fa-brain mr-2"></i>Run AI Analysis
+            </button>
+            <a href="{{ url_for('create_budget') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>Create Budget
+            </a>
+        </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg shadow-md p-6 mb-8 text-white">
+        <h2 class="text-2xl font-bold mb-4">
+            <i class="fas fa-lightbulb mr-2"></i>AI Insights & Recommendations
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for insight in ai_insights %}
+            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-white text-xl mr-3 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold mb-1">{{ insight.title }}</h3>
+                        <p class="text-sm opacity-90">{{ insight.description }}</p>
+                        <div class="mt-2">
+                            <span class="px-2 py-1 text-xs rounded-full bg-white bg-opacity-30">
+                                {{ insight.priority }} priority
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Budget Overview -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Budget vs Actual</h2>
+            <canvas id="budgetActualChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Forecast Accuracy</h2>
+            <canvas id="forecastAccuracyChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Financial Goals Progress -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Financial Goals Progress</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for goal in financial_goals %}
+            <div class="border rounded-lg p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-semibold">{{ goal.name }}</h3>
+                        <p class="text-sm text-gray-600">{{ goal.description }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full {% if goal.status == 'on_track' %}bg-green-100 text-green-800{% elif goal.status == 'at_risk' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ goal.status.replace('_', ' ').title() }}
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Progress</span>
+                        <span>{{ "%.1f"|format(goal.progress_percentage) }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ goal.progress_percentage }}%"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                        <span class="text-gray-600">Target:</span>
+                        <span class="font-medium">${{ "%.2f"|format(goal.target_amount) }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Current:</span>
+                        <span class="font-medium">${{ "%.2f"|format(goal.current_amount) }}</span>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-gray-500">
+                    Target date: {{ goal.target_date.strftime('%Y-%m-%d') }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
+                <button onclick="addFinancialGoal()" class="text-gray-500 hover:text-gray-700 text-center">
+                    <i class="fas fa-plus text-2xl mb-2"></i>
+                    <p class="text-sm">Add Financial Goal</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Forecasts -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">AI-Powered Forecasts</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+                <h3 class="font-medium mb-3">Revenue Forecast</h3>
+                <canvas id="revenueForecastChart" width="400" height="200"></canvas>
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <strong>AI Prediction:</strong> Revenue expected to grow by {{ forecasts.revenue_growth }}% over the next 6 months
+                    </p>
+                </div>
+            </div>
+            <div>
+                <h3 class="font-medium mb-3">Expense Forecast</h3>
+                <canvas id="expenseForecastChart" width="400" height="200"></canvas>
+                <div class="mt-4 p-4 bg-red-50 rounded-lg">
+                    <p class="text-sm text-red-800">
+                        <strong>AI Prediction:</strong> Expenses expected to increase by {{ forecasts.expense_growth }}% over the next 6 months
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Categories -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Budget Categories</h2>
+            <select id="budgetPeriod" class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="current">Current Period</option>
+                <option value="next">Next Period</option>
+                <option value="previous">Previous Period</option>
+            </select>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Budgeted</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actual</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Variance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for category in budget_categories %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium">{{ category.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">${{ "%.2f"|format(category.budgeted) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">${{ "%.2f"|format(category.actual) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right font-medium {% if category.variance > 0 %}text-green-600{% elif category.variance < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                            {{ "%.2f"|format(category.variance) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if category.percentage_used <= 80 %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">On Track</span>
+                            {% elif category.percentage_used <= 100 %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Warning</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Over Budget</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                            <button onclick="editBudgetCategory({{ category.id }})" class="text-blue-600 hover:text-blue-900">Edit</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scenario Analysis -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">Scenario Analysis</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="border rounded-lg p-4">
+                <h3 class="font-semibold mb-3 text-green-700">Best Case Scenario</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>Revenue Growth:</span>
+                        <span class="font-medium">+{{ scenarios.best_case.revenue_growth }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Cost Reduction:</span>
+                        <span class="font-medium">-{{ scenarios.best_case.cost_reduction }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Net Profit:</span>
+                        <span class="font-medium text-green-600">${{ "%.2f"|format(scenarios.best_case.net_profit) }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border rounded-lg p-4">
+                <h3 class="font-semibold mb-3 text-blue-700">Most Likely Scenario</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>Revenue Growth:</span>
+                        <span class="font-medium">+{{ scenarios.most_likely.revenue_growth }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Cost Reduction:</span>
+                        <span class="font-medium">-{{ scenarios.most_likely.cost_reduction }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Net Profit:</span>
+                        <span class="font-medium text-blue-600">${{ "%.2f"|format(scenarios.most_likely.net_profit) }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border rounded-lg p-4">
+                <h3 class="font-semibold mb-3 text-red-700">Worst Case Scenario</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>Revenue Growth:</span>
+                        <span class="font-medium">{{ scenarios.worst_case.revenue_growth }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Cost Increase:</span>
+                        <span class="font-medium">+{{ scenarios.worst_case.cost_increase }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Net Profit:</span>
+                        <span class="font-medium text-red-600">${{ "%.2f"|format(scenarios.worst_case.net_profit) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Budget vs Actual Chart
+const budgetActualCtx = document.getElementById('budgetActualChart').getContext('2d');
+new Chart(budgetActualCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ budget_chart_labels|tojson }},
+        datasets: [{
+            label: 'Budgeted',
+            data: {{ budgeted_data|tojson }},
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgb(59, 130, 246)',
+            borderWidth: 1
+        }, {
+            label: 'Actual',
+            data: {{ actual_data|tojson }},
+            backgroundColor: 'rgba(34, 197, 94, 0.5)',
+            borderColor: 'rgb(34, 197, 94)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Forecast Accuracy Chart
+const forecastAccuracyCtx = document.getElementById('forecastAccuracyChart').getContext('2d');
+new Chart(forecastAccuracyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ forecast_accuracy_labels|tojson }},
+        datasets: [{
+            label: 'Forecasted',
+            data: {{ forecasted_data|tojson }},
+            borderColor: 'rgb(147, 51, 234)',
+            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+            tension: 0.1
+        }, {
+            label: 'Actual',
+            data: {{ actual_forecast_data|tojson }},
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Revenue Forecast Chart
+const revenueForecastCtx = document.getElementById('revenueForecastChart').getContext('2d');
+new Chart(revenueForecastCtx, {
+    type: 'line',
+    data: {
+        labels: {{ revenue_forecast_labels|tojson }},
+        datasets: [{
+            label: 'Historical',
+            data: {{ historical_revenue|tojson }},
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.1
+        }, {
+            label: 'Forecast',
+            data: {{ forecasted_revenue|tojson }},
+            borderColor: 'rgb(147, 51, 234)',
+            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+            borderDash: [5, 5],
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Expense Forecast Chart
+const expenseForecastCtx = document.getElementById('expenseForecastChart').getContext('2d');
+new Chart(expenseForecastCtx, {
+    type: 'line',
+    data: {
+        labels: {{ expense_forecast_labels|tojson }},
+        datasets: [{
+            label: 'Historical',
+            data: {{ historical_expenses|tojson }},
+            borderColor: 'rgb(239, 68, 68)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.1
+        }, {
+            label: 'Forecast',
+            data: {{ forecasted_expenses|tojson }},
+            borderColor: 'rgb(251, 146, 60)',
+            backgroundColor: 'rgba(251, 146, 60, 0.1)',
+            borderDash: [5, 5],
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+function runAIAnalysis() {
+    fetch('/api/ai/analyze-finances', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('AI analysis completed successfully! Insights have been updated.');
+            location.reload();
+        } else {
+            alert('Error running AI analysis: ' + data.message);
+        }
+    });
+}
+
+function addFinancialGoal() {
+    window.location.href = '/financial/goals/new';
+}
+
+function editBudgetCategory(categoryId) {
+    window.location.href = `/budget/categories/${categoryId}/edit`;
+}
+
+// Update budget categories when period changes
+document.getElementById('budgetPeriod').addEventListener('change', function() {
+    const period = this.value;
+    fetch(`/api/budget/categories?period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update the budget categories table
+            location.reload();
+        });
+});
+</script>
+{% endblock %}
