@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports - Mobi Invoice{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Financial Reports</h1>
+        <div class="flex space-x-4">
+            <select id="reportType" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all">All Reports</option>
+                <option value="financial">Financial Statements</option>
+                <option value="sales">Sales Reports</option>
+                <option value="tax">Tax Reports</option>
+                <option value="aging">Aging Reports</option>
+            </select>
+            <button onclick="generateCustomReport()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                <i class="fas fa-plus mr-2"></i>Generate Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Report Generation Panel -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Generate Custom Report</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                <select id="customReportType" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="profit_loss">Profit & Loss Statement</option>
+                    <option value="balance_sheet">Balance Sheet</option>
+                    <option value="cash_flow">Cash Flow Statement</option>
+                    <option value="sales_summary">Sales Summary</option>
+                    <option value="tax_summary">Tax Summary</option>
+                    <option value="aging_report">Aging Report</option>
+                    <option value="customer_analysis">Customer Analysis</option>
+                    <option value="expense_analysis">Expense Analysis</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                <select id="dateRange" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
+                    <option value="this_quarter">This Quarter</option>
+                    <option value="last_quarter">Last Quarter</option>
+                    <option value="this_year">This Year</option>
+                    <option value="last_year">Last Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                <select id="reportFormat" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="html">View Online</option>
+                    <option value="pdf">Download PDF</option>
+                    <option value="excel">Download Excel</option>
+                    <option value="csv">Download CSV</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button onclick="generateReport()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-file-download mr-2"></i>Generate Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Scheduled Reports -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Scheduled Reports</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for scheduled_report in scheduled_reports %}
+            <div class="border rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-medium">{{ scheduled_report.name }}</h3>
+                    <span class="px-2 py-1 text-xs rounded-full {% if scheduled_report.is_active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ 'Active' if scheduled_report.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">{{ scheduled_report.description }}</p>
+                <p class="text-sm text-gray-500 mb-3">
+                    <i class="fas fa-clock mr-1"></i>{{ scheduled_report.frequency }}
+                </p>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500">Last run: {{ scheduled_report.last_run or 'Never' }}</span>
+                    <div class="flex space-x-2">
+                        <button onclick="editScheduledReport({{ scheduled_report.id }})" class="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
+                        <button onclick="runScheduledReport({{ scheduled_report.id }})" class="text-green-600 hover:text-green-900 text-sm">Run Now</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
+                <button onclick="addScheduledReport()" class="text-gray-500 hover:text-gray-700 text-center">
+                    <i class="fas fa-plus text-2xl mb-2"></i>
+                    <p class="text-sm">Add Scheduled Report</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold">Recent Reports</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Range</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Size</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for report in recent_reports %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                                <span class="font-medium">{{ report.name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ report.type.replace('_', ' ').title() }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ report.start_date }} to {{ report.end_date }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ report.generated_at.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ report.generated_by }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ report.file_size }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="viewReport({{ report.id }})" class="text-blue-600 hover:text-blue-900">View</button>
+                                <button onclick="downloadReport({{ report.id }})" class="text-green-600 hover:text-green-900">Download</button>
+                                <button onclick="emailReport({{ report.id }})" class="text-purple-600 hover:text-purple-900">Email</button>
+                                <button onclick="deleteReport({{ report.id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Email Report Modal -->
+<div id="emailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Email Report</h3>
+                <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="emailForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recipient Email</label>
+                    <input type="email" id="recipientEmail" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                    <input type="text" id="emailSubject" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                    <textarea id="emailMessage" rows="4" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeEmailModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Send Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentReportId = null;
+
+function generateReport() {
+    const type = document.getElementById('customReportType').value;
+    const dateRange = document.getElementById('dateRange').value;
+    const format = document.getElementById('reportFormat').value;
+    
+    const params = new URLSearchParams({
+        type: type,
+        date_range: dateRange,
+        format: format
+    });
+    
+    if (format === 'html') {
+        window.open(`/reports/generate?${params}`, '_blank');
+    } else {
+        window.location.href = `/reports/generate?${params}`;
+    }
+}
+
+function viewReport(reportId) {
+    window.open(`/reports/${reportId}/view`, '_blank');
+}
+
+function downloadReport(reportId) {
+    window.location.href = `/reports/${reportId}/download`;
+}
+
+function emailReport(reportId) {
+    currentReportId = reportId;
+    document.getElementById('emailModal').classList.remove('hidden');
+}
+
+function closeEmailModal() {
+    document.getElementById('emailModal').classList.add('hidden');
+    document.getElementById('emailForm').reset();
+    currentReportId = null;
+}
+
+document.getElementById('emailForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const emailData = {
+        recipient: document.getElementById('recipientEmail').value,
+        subject: document.getElementById('emailSubject').value,
+        message: document.getElementById('emailMessage').value
+    };
+    
+    fetch(`/api/reports/${currentReportId}/email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Report sent successfully!');
+            closeEmailModal();
+        } else {
+            alert('Error sending report: ' + data.message);
+        }
+    });
+});
+
+function deleteReport(reportId) {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        fetch(`/api/reports/${reportId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report deleted successfully!');
+                location.reload();
+            } else {
+                alert('Error deleting report: ' + data.message);
+            }
+        });
+    }
+}
+
+function editScheduledReport(reportId) {
+    window.location.href = `/reports/scheduled/${reportId}/edit`;
+}
+
+function runScheduledReport(reportId) {
+    if (confirm('Are you sure you want to run this scheduled report now?')) {
+        fetch(`/api/reports/scheduled/${reportId}/run`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report generation started successfully!');
+            } else {
+                alert('Error running report: ' + data.message);
+            }
+        });
+    }
+}
+
+function addScheduledReport() {
+    window.location.href = '/reports/scheduled/new';
+}
+
+function generateCustomReport() {
+    document.getElementById('customReportType').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Filter reports
+document.getElementById('reportType').addEventListener('change', function() {
+    const filter = this.value;
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        if (filter === 'all') {
+            row.style.display = '';
+        } else {
+            const reportType = row.querySelector('td:nth-child(2) span').textContent.toLowerCase();
+            const matchesFilter = 
+                (filter === 'financial' && reportType.includes('profit') || reportType.includes('balance') || reportType.includes('cash')) ||
+                (filter === 'sales' && reportType.includes('sales')) ||
+                (filter === 'tax' && reportType.includes('tax')) ||
+                (filter === 'aging' && reportType.includes('aging'));
+            
+            row.style.display = matchesFilter ? '' : 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
