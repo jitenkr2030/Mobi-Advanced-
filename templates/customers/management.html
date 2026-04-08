@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Management - Mobi Invoice{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Customer Management</h1>
+        <div class="flex space-x-4">
+            <a href="{{ url_for('add_customer') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>Add Customer
+            </a>
+            <button onclick="showCustomerGroups()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                <i class="fas fa-users mr-2"></i>Manage Groups
+            </button>
+        </div>
+    </div>
+
+    <!-- Customer Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Customers</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ stats.total_customers }}</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-users text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Active Customers</p>
+                    <p class="text-2xl font-bold text-green-600">{{ stats.active_customers }}</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-user-check text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Revenue</p>
+                    <p class="text-2xl font-bold text-purple-600">${{ "%.2f"|format(stats.total_revenue) }}</p>
+                </div>
+                <div class="bg-purple-100 rounded-full p-3">
+                    <i class="fas fa-dollar-sign text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Avg. Customer Value</p>
+                    <p class="text-2xl font-bold text-orange-600">${{ "%.2f"|format(stats.avg_customer_value) }}</p>
+                </div>
+                <div class="bg-orange-100 rounded-full p-3">
+                    <i class="fas fa-chart-line text-orange-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search Customers</label>
+                <input type="text" id="searchInput" placeholder="Search by name, email, or phone..." 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Customer Group</label>
+                <select id="groupFilter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Groups</option>
+                    {% for group in customer_groups %}
+                    <option value="{{ group.id }}">{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select id="statusFilter" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="customersTableBody">
+                    {% for customer in customers %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                        <span class="text-white font-medium">{{ customer.name[0].upper() }}</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
+                                    <div class="text-sm text-gray-500">ID: {{ customer.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ customer.email }}</div>
+                            <div class="text-sm text-gray-500">{{ customer.phone }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                {{ customer.group.name if customer.group else 'No Group' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if customer.status == 'active' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            {% elif customer.status == 'inactive' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Overdue</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                            ${{ "%.2f"|format(customer.total_revenue) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {% if customer.outstanding_balance > 0 %}
+                                <span class="text-red-600">${{ "%.2f"|format(customer.outstanding_balance) }}</span>
+                            {% else %}
+                                <span class="text-green-600">$0.00</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{{ url_for('view_customer', id=customer.id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                <a href="{{ url_for('edit_customer', id=customer.id) }}" class="text-green-600 hover:text-green-900">Edit</a>
+                                <button onclick="showCustomerHistory({{ customer.id }})" class="text-purple-600 hover:text-purple-900">History</button>
+                                <button onclick="sendReminder({{ customer.id }})" class="text-orange-600 hover:text-orange-900">Remind</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex justify-between items-center">
+        <div class="text-sm text-gray-700">
+            Showing {{ customers|length }} of {{ total_customers }} customers
+        </div>
+        <div class="flex space-x-2">
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-50">Previous</button>
+            <button class="px-3 py-1 bg-blue-600 text-white rounded-md">1</button>
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-50">2</button>
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-50">3</button>
+            <button class="px-3 py-1 border rounded-md hover:bg-gray-50">Next</button>
+        </div>
+    </div>
+</div>
+
+<!-- Customer History Modal -->
+<div id="customerHistoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Customer Communication History</h3>
+                <button onclick="closeCustomerHistory()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="customerHistoryContent">
+                <!-- History content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showCustomerHistory(customerId) {
+    // Load customer history via AJAX
+    fetch(`/api/customer/${customerId}/history`)
+        .then(response => response.json())
+        .then(data => {
+            const content = document.getElementById('customerHistoryContent');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    ${data.history.map(item => `
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">${item.type}</p>
+                                    <p class="text-sm text-gray-600">${item.message}</p>
+                                </div>
+                                <span class="text-xs text-gray-500">${item.date}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('customerHistoryModal').classList.remove('hidden');
+        });
+}
+
+function closeCustomerHistory() {
+    document.getElementById('customerHistoryModal').classList.add('hidden');
+}
+
+function sendReminder(customerId) {
+    if (confirm('Are you sure you want to send a payment reminder to this customer?')) {
+        fetch(`/api/customer/${customerId}/send-reminder`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Payment reminder sent successfully!');
+            } else {
+                alert('Error sending reminder: ' + data.message);
+            }
+        });
+    }
+}
+
+function showCustomerGroups() {
+    window.location.href = '{{ url_for("customer_groups") }}';
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', filterCustomers);
+document.getElementById('groupFilter').addEventListener('change', filterCustomers);
+document.getElementById('statusFilter').addEventListener('change', filterCustomers);
+
+function filterCustomers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const groupFilter = document.getElementById('groupFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#customersTableBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const matchesSearch = text.includes(searchTerm);
+        const matchesGroup = !groupFilter || row.textContent.includes(groupFilter);
+        const matchesStatus = !statusFilter || row.textContent.includes(statusFilter);
+        
+        row.style.display = matchesSearch && matchesGroup && matchesStatus ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}
