@@ -6,88 +6,389 @@
     <title>{% block title %}Mobi Invoice Termux{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/mobile-responsive.css') }}" rel="stylesheet">
     <style>
+        /* Mobile-First Responsive Design */
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
         }
+        
         .main-content {
             background-color: #f8f9fa;
             min-height: 100vh;
         }
+        
         .card {
             border: none;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             transition: all 0.3s ease;
+            margin-bottom: 1rem;
         }
+        
         .card:hover {
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
         }
+        
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
+            transition: all 0.3s ease;
         }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-1px);
+        }
+        
         .navbar-brand {
             font-weight: bold;
             color: #fff !important;
         }
+        
         .nav-link {
             color: rgba(255, 255, 255, 0.8) !important;
             transition: color 0.3s ease;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
         }
+        
         .nav-link:hover {
             color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.1);
         }
+        
         .nav-link.active {
             color: #fff !important;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 0.375rem;
+            background-color: rgba(255, 255, 255, 0.15);
         }
+        
         .stats-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
+        
         .stats-card .card-body {
             padding: 1.5rem;
         }
+        
         .stats-number {
             font-size: 2rem;
             font-weight: bold;
         }
+        
+        /* Mobile Menu Button */
         .mobile-menu-btn {
             display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
         }
-        @media (max-width: 768px) {
+        
+        .mobile-menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .mobile-menu-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Mobile Sidebar */
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .mobile-sidebar.active {
+            left: 0;
+        }
+        
+        /* Mobile Overlay */
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+        }
+        
+        /* Responsive Breakpoints */
+        @media (max-width: 1200px) {
             .sidebar {
-                position: fixed;
-                top: 0;
-                left: -250px;
-                width: 250px;
-                height: 100vh;
-                z-index: 1000;
-                transition: left 0.3s ease;
-            }
-            .sidebar.active {
-                left: 0;
-            }
-            .mobile-menu-btn {
-                display: block;
-                position: fixed;
-                top: 1rem;
-                left: 1rem;
-                z-index: 1001;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border: none;
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 0.375rem;
+                width: 220px;
             }
             .main-content {
                 margin-left: 0;
             }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 200px;
+            }
+            .stats-number {
+                font-size: 1.5rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
             .desktop-sidebar {
-                display: none;
+                display: none !important;
+            }
+            
+            .mobile-sidebar {
+                display: block;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding-top: 60px;
+            }
+            
+            .container-fluid {
+                padding-left: 0;
+                padding-right: 0;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+                border-radius: 0.5rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-group .btn {
+                margin-bottom: 0.5rem;
+                border-radius: 0.375rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+            
+            .stats-card .card-body {
+                padding: 1rem;
+            }
+            
+            .stats-number {
+                font-size: 1.25rem;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                margin-bottom: 0.125rem;
+            }
+            
+            .dropdown-menu {
+                position: fixed !important;
+                top: auto !important;
+                bottom: 60px !important;
+                left: 1rem !important;
+                right: 1rem !important;
+                width: auto !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .mobile-sidebar {
+                width: 100%;
+                left: -100%;
+            }
+            
+            .mobile-menu-btn {
+                top: 0.75rem;
+                left: 0.75rem;
+                padding: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem 0.5rem;
+            }
+            
+            .card {
+                border-radius: 0.25rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .card-body {
+                padding: 0.75rem;
+            }
+            
+            .btn {
+                font-size: 0.875rem;
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .btn-sm {
+                font-size: 0.75rem;
+                padding: 0.375rem 0.5rem;
+            }
+            
+            .stats-number {
+                font-size: 1.125rem;
+            }
+            
+            .stats-card .card-body {
+                padding: 0.75rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .modal-content {
+                border-radius: 0.5rem;
+            }
+            
+            .modal-header {
+                padding: 1rem;
+            }
+            
+            .modal-body {
+                padding: 1rem;
+            }
+            
+            .modal-footer {
+                padding: 1rem;
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .modal-footer .btn:last-child {
+                margin-bottom: 0;
+            }
+        }
+        
+        /* Touch-Friendly Interactions */
+        @media (hover: none) and (pointer: coarse) {
+            .btn,
+            .nav-link,
+            .card {
+                min-height: 44px;
+            }
+            
+            .btn:active {
+                transform: scale(0.98);
+            }
+            
+            .nav-link:active {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+        }
+        
+        /* Landscape Mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .mobile-sidebar {
+                height: 100vh;
+                max-height: 100vh;
+            }
+            
+            .main-content {
+                padding-top: 50px;
+            }
+        }
+        
+        /* Safe Area Support */
+        @supports (padding: max(0px)) {
+            .mobile-menu-btn {
+                left: max(1rem, env(safe-area-inset-left));
+                top: max(1rem, env(safe-area-inset-top));
+            }
+            
+            .main-content {
+                padding-left: max(0.5rem, env(safe-area-inset-left));
+                padding-right: max(0.5rem, env(safe-area-inset-right));
+            }
+        }
+        
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Focus States for Accessibility */
+        .btn:focus,
+        .nav-link:focus,
+        .form-control:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+        
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        /* Animation Classes */
+        .slide-in-left {
+            animation: slideInLeft 0.3s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
             }
         }
     </style>
@@ -99,9 +400,12 @@
         <i class="fas fa-bars"></i>
     </button>
 
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeSidebar()"></div>
+
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
+            <!-- Desktop Sidebar -->
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse desktop-sidebar">
                 <div class="position-sticky pt-3">
                     <div class="navbar-brand mb-4 text-center">
@@ -113,31 +417,31 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                                 <i class="fas fa-tachometer-alt me-2"></i>
-                                Dashboard
+                                <span>Dashboard</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'invoices' %}active{% endif %}" href="{{ url_for('invoices') }}">
                                 <i class="fas fa-file-invoice me-2"></i>
-                                Invoices
+                                <span>Invoices</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'quotes' %}active{% endif %}" href="{{ url_for('quotes') }}">
                                 <i class="fas fa-quote-right me-2"></i>
-                                Quotes
+                                <span>Quotes</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'customer_management' %}active{% endif %}" href="{{ url_for('customer_management') }}">
                                 <i class="fas fa-users me-2"></i>
-                                Customer Management
+                                <span>Customers</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'advanced_invoicing' %}active{% endif %}" href="{{ url_for('advanced_invoicing') }}">
                                 <i class="fas fa-file-invoice-dollar me-2"></i>
-                                Advanced Invoicing
+                                <span>Advanced</span>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -146,26 +450,26 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint in ['financial_analytics_dashboard', 'financial_reports', 'ai_budgeting'] %}active{% else %}collapsed{% endif %}" href="#financialMenu" data-bs-toggle="collapse" role="button">
                                 <i class="fas fa-chart-line me-2"></i>
-                                Financial Analytics
+                                <span>Analytics</span>
                                 <i class="fas fa-chevron-down ms-auto"></i>
                             </a>
                             <ul class="collapse nav flex-column ms-3" id="financialMenu">
                                 <li class="nav-item">
                                     <a class="nav-link {% if request.endpoint == 'financial_analytics_dashboard' %}active{% endif %}" href="{{ url_for('financial_analytics_dashboard') }}">
                                         <i class="fas fa-tachometer-alt me-2"></i>
-                                        Analytics Dashboard
+                                        <span>Dashboard</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link {% if request.endpoint == 'financial_reports' %}active{% endif %}" href="{{ url_for('financial_reports') }}">
                                         <i class="fas fa-file-alt me-2"></i>
-                                        Financial Reports
+                                        <span>Reports</span>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link {% if request.endpoint == 'ai_budgeting' %}active{% endif %}" href="{{ url_for('ai_budgeting') }}">
                                         <i class="fas fa-brain me-2"></i>
-                                        AI Budgeting & Forecasting
+                                        <span>AI Budgeting</span>
                                     </a>
                                 </li>
                             </ul>
@@ -173,94 +477,28 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'products' %}active{% endif %}" href="{{ url_for('products') }}">
                                 <i class="fas fa-box me-2"></i>
-                                Products
+                                <span>Products</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'recurring' %}active{% endif %}" href="{{ url_for('recurring') }}">
                                 <i class="fas fa-sync me-2"></i>
-                                Recurring
+                                <span>Recurring</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <hr class="text-white-50">
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'financial_analytics' %}active{% endif {% else %}collapsed{% endif %}" href="#financialMenu" data-bs-toggle="collapse" role="button">
-                                <i class="fas fa-chart-line me-2"></i>
-                                Financial Analytics
-                                <i class="fas fa-chevron-down ms-auto"></i>
-                            </a>
-                            <ul class="collapse nav flex-column ms-3" id="financialMenu">
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.endpoint == 'profit_loss_statement' %}active{% endif %}" href="{{ url_for('profit_loss_statement') }}">
-                                        <i class="fas fa-chart-bar me-2"></i>
-                                        Profit & Loss
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.endpoint == 'cash_flow_analysis' %}active{% endif %}" href="{{ url_for('cash_flow_analysis') }}">
-                                        <i class="fas fa-money-bill-wave me-2"></i>
-                                        Cash Flow
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.endpoint == 'aging_report' %}active{% endif %}" href="{{ url_for('aging_report') }}">
-                                        <i class="fas fa-clock me-2"></i>
-                                        Aging Report
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.endpoint == 'budgets' %}active{% endif %}" href="{{ url_for('budgets') }}">
-                                        <i class="fas fa-piggy-bank me-2"></i>
-                                        Budgets
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.endpoint == 'expenses' %}active{% endif %}" href="{{ url_for('expenses') }}">
-                                        <i class="fas fa-receipt me-2"></i>
-                                        Expenses
-                                    </a>
-                                </li>
-                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
                                 <i class="fas fa-chart-bar me-2"></i>
-                                Reports
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <hr class="text-white-50">
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'invoice_templates' %}active{% endif %}" href="{{ url_for('invoice_templates') }}">
-                                <i class="fas fa-file-alt me-2"></i>
-                                Templates
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'currencies' %}active{% endif %}" href="{{ url_for('currencies') }}">
-                                <i class="fas fa-globe me-2"></i>
-                                Currencies
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'discount_coupons' %}active{% endif %}" href="{{ url_for('discount_coupons') }}">
-                                <i class="fas fa-tag me-2"></i>
-                                Discounts
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'customer_groups' %}active{% endif %}" href="{{ url_for('customer_groups') }}">
-                                <i class="fas fa-layer-group me-2"></i>
-                                Customer Groups
+                                <span>Reports</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}">
                                 <i class="fas fa-cog me-2"></i>
-                                Settings
+                                <span>Settings</span>
                             </a>
                         </li>
                     </ul>
@@ -286,10 +524,150 @@
                 </div>
             </nav>
 
+            <!-- Mobile Sidebar -->
+            <nav class="mobile-sidebar sidebar" id="mobileSidebar">
+                <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-white-20">
+                    <div class="navbar-brand text-white">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>
+                        Mobi Invoice
+                    </div>
+                    <button class="btn btn-link text-white p-2" onclick="closeSidebar()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}" onclick="closeSidebar()">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'invoices' %}active{% endif %}" href="{{ url_for('invoices') }}" onclick="closeSidebar()">
+                                <i class="fas fa-file-invoice me-2"></i>
+                                <span>Invoices</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'quotes' %}active{% endif %}" href="{{ url_for('quotes') }}" onclick="closeSidebar()">
+                                <i class="fas fa-quote-right me-2"></i>
+                                <span>Quotes</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'customer_management' %}active{% endif %}" href="{{ url_for('customer_management') }}" onclick="closeSidebar()">
+                                <i class="fas fa-users me-2"></i>
+                                <span>Customers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'advanced_invoicing' %}active{% endif %}" href="{{ url_for('advanced_invoicing') }}" onclick="closeSidebar()">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>
+                                <span>Advanced</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <hr class="text-white-50">
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint in ['financial_analytics_dashboard', 'financial_reports', 'ai_budgeting'] %}active{% else %}collapsed{% endif %}" href="#mobileFinancialMenu" data-bs-toggle="collapse" role="button">
+                                <i class="fas fa-chart-line me-2"></i>
+                                <span>Analytics</span>
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </a>
+                            <ul class="collapse nav flex-column ms-3" id="mobileFinancialMenu">
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.endpoint == 'financial_analytics_dashboard' %}active{% endif %}" href="{{ url_for('financial_analytics_dashboard') }}" onclick="closeSidebar()">
+                                        <i class="fas fa-tachometer-alt me-2"></i>
+                                        <span>Dashboard</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.endpoint == 'financial_reports' %}active{% endif %}" href="{{ url_for('financial_reports') }}" onclick="closeSidebar()">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        <span>Reports</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.endpoint == 'ai_budgeting' %}active{% endif %}" href="{{ url_for('ai_budgeting') }}" onclick="closeSidebar()">
+                                        <i class="fas fa-brain me-2"></i>
+                                        <span>AI Budgeting</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'products' %}active{% endif %}" href="{{ url_for('products') }}" onclick="closeSidebar()">
+                                <i class="fas fa-box me-2"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'recurring' %}active{% endif %}" href="{{ url_for('recurring') }}" onclick="closeSidebar()">
+                                <i class="fas fa-sync me-2"></i>
+                                <span>Recurring</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <hr class="text-white-50">
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" href="{{ url_for('settings') }}" onclick="closeSidebar()">
+                                <i class="fas fa-cog me-2"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <hr class="text-white-50">
+
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="mobileDropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <strong>{{ current_user.name if current_user.is_authenticated else 'Guest' }}</strong>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="mobileDropdownUser1">
+                            {% if current_user.is_authenticated %}
+                                <li><a class="dropdown-item" href="{{ url_for('profile') }}" onclick="closeSidebar()">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('settings') }}" onclick="closeSidebar()">Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}" onclick="closeSidebar()">Sign out</a></li>
+                            {% else %}
+                                <li><a class="dropdown-item" href="{{ url_for('login') }}" onclick="closeSidebar()">Sign in</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
             <!-- Main Content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">{% block page_title %}Dashboard{% endblock %}</h1>
+                <!-- Mobile Header -->
+                <div class="d-md-none bg-white shadow-sm p-3 mb-3 rounded">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h1 class="h5 mb-0 fw-bold">{% block mobile_page_title %}Dashboard{% endblock %}</h1>
+                            <p class="text-muted small mb-0">Mobile Optimized</p>
+                        </div>
+                        <div class="d-flex align-items-center space-x-2">
+                            <button class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-bell"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Header -->
+                <div class="d-none d-md-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <div>
+                        <h1 class="h2">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <p class="text-muted">Welcome back! Here's your business overview.</p>
+                    </div>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         {% block page_actions %}{% endblock %}
                     </div>
@@ -300,8 +678,11 @@
                     {% if messages %}
                         {% for category, message in messages %}
                             <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-{% if category == 'error' %}exclamation-triangle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+                                    <div class="flex-grow-1">{{ message }}</div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
                             </div>
                         {% endfor %}
                     {% endif %}
@@ -316,24 +697,68 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Mobile Sidebar Functions
         function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('active');
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                
+                // Prevent body scroll when sidebar is open
+                if (sidebar.classList.contains('active')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            }
         }
-
+        
+        function closeSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            if (sidebar && overlay) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(event) {
-            const sidebar = document.querySelector('.sidebar');
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileOverlay');
             const menuBtn = document.querySelector('.mobile-menu-btn');
             
             if (window.innerWidth <= 768 && 
+                sidebar && overlay && menuBtn &&
                 !sidebar.contains(event.target) && 
                 !menuBtn.contains(event.target) && 
                 sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
+                closeSidebar();
             }
         });
-
+        
+        // Close sidebar on escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+        
+        // Handle window resize
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (window.innerWidth > 768) {
+                    closeSidebar();
+                }
+            }, 250);
+        });
+        
         // Auto-hide flash messages
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
@@ -342,6 +767,151 @@
                 bsAlert.close();
             });
         }, 5000);
+        
+        // Add loading states to buttons
+        document.addEventListener('click', function(event) {
+            if (event.target.tagName === 'BUTTON' && event.target.type === 'submit') {
+                const button = event.target;
+                const originalText = button.innerHTML;
+                
+                // Add loading state
+                button.classList.add('loading');
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+                
+                // Remove loading state after 3 seconds (fallback)
+                setTimeout(function() {
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }, 3000);
+            }
+        });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Add touch feedback for mobile
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.btn, .nav-link, .card').forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                
+                element.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+        }
+        
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Handle form validation on mobile
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                if (window.innerWidth <= 768) {
+                    const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+                    let firstInvalid = null;
+                    
+                    inputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            input.classList.add('is-invalid');
+                            if (!firstInvalid) firstInvalid = input;
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                    
+                    if (firstInvalid) {
+                        event.preventDefault();
+                        firstInvalid.focus();
+                        firstInvalid.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                }
+            });
+        });
+        
+        // Mobile table improvements
+        function makeTablesResponsive() {
+            document.querySelectorAll('.table-responsive').forEach(tableContainer => {
+                const table = tableContainer.querySelector('table');
+                if (table && window.innerWidth <= 768) {
+                    // Add horizontal scroll indicators
+                    tableContainer.classList.add('scroll-shadow');
+                    
+                    // Add swipe hint for mobile
+                    if (!tableContainer.dataset.hintAdded) {
+                        const hint = document.createElement('div');
+                        hint.className = 'text-muted text-center small mb-2';
+                        hint.innerHTML = '<i class="fas fa-hand-point-right me-1"></i> Swipe to see more';
+                        tableContainer.parentNode.insertBefore(hint, tableContainer);
+                        tableContainer.dataset.hintAdded = 'true';
+                    }
+                }
+            });
+        }
+        
+        // Initialize responsive tables
+        makeTablesResponsive();
+        window.addEventListener('resize', makeTablesResponsive);
+        
+        // Add mobile-specific CSS classes
+        function updateMobileClasses() {
+            const isMobile = window.innerWidth <= 768;
+            document.body.classList.toggle('mobile-view', isMobile);
+            document.body.classList.toggle('desktop-view', !isMobile);
+        }
+        
+        updateMobileClasses();
+        window.addEventListener('resize', updateMobileClasses);
+        
+        // Performance optimization: Debounce scroll events
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // Optimized scroll handling
+        const handleScroll = debounce(function() {
+            // Add scroll-based animations
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelectorAll('.parallax');
+            
+            parallax.forEach(element => {
+                const speed = element.dataset.speed || 0.5;
+                element.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        }, 10);
+        
+        window.addEventListener('scroll', handleScroll);
+        
+        // Console log for debugging
+        console.log('Mobi Invoice - Mobile Responsive Design Loaded');
     </script>
     {% block extra_js %}{% endblock %}
 </body>
